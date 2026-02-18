@@ -38,10 +38,16 @@ const Shape = union(enum) {
 const Entity = struct {
     id: usize,
     shape: Shape,
+    links: std.ArrayList(Link),
 
     fn draw(self: *const Entity) void {
         self.shape.draw();
     }
+};
+
+const Link = struct {
+    transform: rl.Matrix,
+    entity: *Entity,
 };
 
 pub fn main() anyerror!void {
@@ -50,17 +56,24 @@ pub fn main() anyerror!void {
     const screenWidth = 800;
     const screenHeight = 450;
 
+    var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+
+
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
     defer rl.closeWindow(); // Close window and OpenGL context
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
-
+    
+    const links: std.ArrayList(Link) = try .initCapacity(allocator, 0);
     const entity1 = Entity{
         .id = 1,
         .shape = .{
             .circle = .{ .center = .{ .x = 0, .y = 0, .z = 0 }, .radius = 10 },
         },
+        .links = links,
     };
 
     // Main game loop
