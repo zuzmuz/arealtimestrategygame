@@ -38,19 +38,26 @@ const Shape = union(enum) {
     }
 };
 
+/// Entity represent
 const Entity = struct {
     id: usize,
     shape: Shape,
     links: std.ArrayList(Link),
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
+        // Draw the entity itself
         self.shape.draw(transform);
+
+        // Draw linked entities
+        for (self.links.items) |link| {
+            link.entity.draw(rl.math.matrixMultiply(transform, link.transform));
+        }
     }
 };
 
 const Link = struct {
     transform: rl.Matrix,
-    entity: *Entity,
+    entity: *const Entity,
 };
 
 pub fn main() anyerror!void {
@@ -69,17 +76,51 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
-    const links: std.ArrayList(Link) = try .initCapacity(allocator, 0);
-    const entity1 = Entity{
-        .id = 1,
-        .shape = .{
-            .circle = .{
-                .center = .{ .x = 0, .y = 0 },
-                .radius = 10,
+    const circle_shape: Shape = .{
+        .circle = .{
+            .center = .{ .x = 0, .y = 0 },
+            .radius = 10,
+        },
+    };
+    const triangle_shape: Shape = .{
+        .triangle = .{
+            .points = .{
+                .{ .x = 0, .y = 10 },
+                .{ .x = 5, .y = -5 },
+                .{ .x = -5, .y = -5 },
             },
         },
-        .links = links,
     };
+
+    const entity_1 = Entity{
+        .id = 2,
+        .shape = triangle_shape,
+        .links = .empty,
+    };
+
+    const entity_2 = Entity{
+        .id = 2,
+        .shape = circle_shape,
+        .links = .empty,
+    };
+
+    var entity_3_links: std.ArrayList(Link) = try .initCapacity(allocator, 2);
+    entity_3_links.appendAssumeCapacity(.{
+        .transform = rl.math.matrixTranslate(20, 0, 0),
+        .entity = &entity_1,
+    });
+    entity_3_links.appendAssumeCapacity(.{
+        .transform = rl.math.matrixTranslate(-20, 0, 0),
+        .entity = &entity_2,
+    });
+
+    const entity_3 = Entity{
+        .id = 1,
+        .shape = circle_shape,
+        .links = entity_3_links,
+    };
+
+    // links.append(allocator, .{ )
 
     // Main game loop
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
@@ -94,7 +135,7 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        entity1.draw(rl.math.matrixTranslate(
+        entity_3.draw(rl.math.matrixTranslate(
             screenWidth * 0.5,
             screenHeight * 0.5,
             0,
