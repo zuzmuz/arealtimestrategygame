@@ -71,9 +71,9 @@ pub fn main() anyerror!void {
     // const allocator = arena.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
-    defer rl.closeWindow(); // Close window and OpenGL context
+    defer rl.closeWindow();
 
-    rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
+    rl.setTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
     const circle_shape: Shape = .{
@@ -104,7 +104,6 @@ pub fn main() anyerror!void {
         .links = &.{},
     };
 
-
     const entity_3 = Entity{
         .id = 1,
         .shape = circle_shape,
@@ -120,14 +119,30 @@ pub fn main() anyerror!void {
         },
     };
 
-    // links.append(allocator, .{ )
+    var selection = false;
+    var selection_begin: ?rl.Vector2 = null;
+    var selection_end: ?rl.Vector2 = null;
 
-    // Main game loop
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
         // Update
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here
         //----------------------------------------------------------------------------------
+
+        if (rl.isMouseButtonDown(.left)) {
+            if (selection) {
+                selection_end = rl.getMousePosition();
+            } else {
+                selection = true;
+                selection_begin = rl.getMousePosition();
+                selection_end = rl.getMousePosition();
+            }
+        }
+        if (rl.isMouseButtonReleased(.left)) {
+            selection = false;
+            selection_begin = null;
+            selection_end = null;
+        }
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -140,7 +155,19 @@ pub fn main() anyerror!void {
             screenHeight * 0.5,
             0,
         ));
-        // rl.drawText("Congrats! You created your first window!", 190, 200, 20, .light_gray);
-        //----------------------------------------------------------------------------------
+
+        // Drawing selection block
+        if (selection_begin) |s_begin| if (selection_end) |s_end| {
+            rl.drawRectangleLinesEx(
+                .{
+                    .x = if (s_begin.x < s_end.x) s_begin.x else s_end.x,
+                    .y = if (s_begin.y < s_end.y) s_begin.y else s_end.y,
+                    .width = if (s_begin.x > s_end.x) s_begin.x - s_end.x else s_end.x - s_begin.x,
+                    .height = if (s_begin.y > s_end.y) s_begin.y - s_end.y else s_end.y - s_begin.y,
+                },
+                2,
+                .black,
+            );
+        };
     }
 }
