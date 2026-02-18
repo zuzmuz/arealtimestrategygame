@@ -42,14 +42,14 @@ const Shape = union(enum) {
 const Entity = struct {
     id: usize,
     shape: Shape,
-    links: std.ArrayList(Link),
+    links: []const Link,
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
         // Draw the entity itself
         self.shape.draw(transform);
 
         // Draw linked entities
-        for (self.links.items) |link| {
+        for (self.links) |link| {
             link.entity.draw(rl.math.matrixMultiply(transform, link.transform));
         }
     }
@@ -68,7 +68,7 @@ pub fn main() anyerror!void {
 
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
     defer arena.deinit();
-    const allocator = arena.allocator();
+    // const allocator = arena.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
     defer rl.closeWindow(); // Close window and OpenGL context
@@ -95,29 +95,29 @@ pub fn main() anyerror!void {
     const entity_1 = Entity{
         .id = 2,
         .shape = triangle_shape,
-        .links = .empty,
+        .links = &.{},
     };
 
     const entity_2 = Entity{
         .id = 2,
         .shape = circle_shape,
-        .links = .empty,
+        .links = &.{},
     };
 
-    var entity_3_links: std.ArrayList(Link) = try .initCapacity(allocator, 2);
-    entity_3_links.appendAssumeCapacity(.{
-        .transform = rl.math.matrixTranslate(20, 0, 0),
-        .entity = &entity_1,
-    });
-    entity_3_links.appendAssumeCapacity(.{
-        .transform = rl.math.matrixTranslate(-20, 0, 0),
-        .entity = &entity_2,
-    });
 
     const entity_3 = Entity{
         .id = 1,
         .shape = circle_shape,
-        .links = entity_3_links,
+        .links = &.{
+            .{
+                .transform = rl.math.matrixTranslate(20, 0, 0),
+                .entity = &entity_1,
+            },
+            .{
+                .transform = rl.math.matrixTranslate(-20, 0, 0),
+                .entity = &entity_2,
+            },
+        },
     };
 
     // links.append(allocator, .{ )
