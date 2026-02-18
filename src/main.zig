@@ -4,30 +4,33 @@ const rl = @import("raylib");
 
 const Shape = union(enum) {
     circle: struct {
-        center: rl.Vector3,
+        center: rl.Vector2,
         radius: f32,
     },
     triangle: struct {
-        points: [3]rl.Vector3,
+        points: [3]rl.Vector2,
     },
 
-    fn draw(self: *const Shape) void {
+    fn draw(self: *const Shape, transform: rl.Matrix) void {
         switch (self.*) {
             .circle => |*circle| {
+                const transformed = rl.math.vector2Transform(circle.center, transform);
                 rl.drawCircleV(
-                    .{
-                        .x = circle.center.x,
-                        .y = circle.center.y,
-                    },
+                    transformed,
                     circle.radius,
                     .red,
                 );
             },
             .triangle => |*triangle| {
+                const points: [3]rl.Vector2 = .{
+                    rl.math.vector2Transform(triangle.points[0], transform),
+                    rl.math.vector2Transform(triangle.points[1], transform),
+                    rl.math.vector2Transform(triangle.points[2], transform),
+                };
                 rl.drawTriangle(
-                    .{ .x = triangle.points[0].x, .y = triangle.points[0].y },
-                    .{ .x = triangle.points[1].x, .y = triangle.points[1].y },
-                    .{ .x = triangle.points[2].x, .y = triangle.points[2].y },
+                    points[0],
+                    points[1],
+                    points[2],
                     .blue,
                 );
             },
@@ -40,8 +43,8 @@ const Entity = struct {
     shape: Shape,
     links: std.ArrayList(Link),
 
-    fn draw(self: *const Entity) void {
-        self.shape.draw();
+    fn draw(self: *const Entity, transform: rl.Matrix) void {
+        self.shape.draw(transform);
     }
 };
 
@@ -60,18 +63,20 @@ pub fn main() anyerror!void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
     defer rl.closeWindow(); // Close window and OpenGL context
 
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
-    
+
     const links: std.ArrayList(Link) = try .initCapacity(allocator, 0);
     const entity1 = Entity{
         .id = 1,
         .shape = .{
-            .circle = .{ .center = .{ .x = 0, .y = 0, .z = 0 }, .radius = 10 },
+            .circle = .{
+                .center = .{ .x = 0, .y = 0 },
+                .radius = 10,
+            },
         },
         .links = links,
     };
@@ -89,7 +94,11 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        entity1.draw();
+        entity1.draw(rl.math.matrixTranslate(
+            screenWidth * 0.5,
+            screenHeight * 0.5,
+            0,
+        ));
         // rl.drawText("Congrats! You created your first window!", 190, 200, 20, .light_gray);
         //----------------------------------------------------------------------------------
     }
