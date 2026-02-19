@@ -43,32 +43,85 @@ pub const Shape = union(enum) {
     }
 };
 
+const base_measure = 50;
+const sqrt3 = 1.732;
+
 pub const base: []const Shape = &.{.{
     .triangle = .{
         .points = .{
-            .{ .x = 0, .y = -20 },
-            .{ .x = -17.32, .y = 10 },
-            .{ .x = 17.32, .y = 10 },
+            .{ .x = 0, .y = -base_measure },
+            .{ .x = -0.5 * sqrt3 * base_measure, .y = 0.5 * base_measure },
+            .{ .x = 0.5 * sqrt3 * base_measure, .y = 0.5 * base_measure },
         },
     },
 }};
 
+const res_size = 0.4;
 pub const res_drop: []const Shape = &.{ .{
     .triangle = .{
         .points = .{
-            .{ .x = -13.2, .y = 5 },
-            .{ .x = 13.2, .y = 5 },
-            .{ .x = -13.2, .y = -5 },
+            .{ .x = -res_size * base_measure, .y = 0.5 * res_size * base_measure },
+            .{ .x = res_size * base_measure, .y = 0.5 * res_size * base_measure },
+            .{ .x = -res_size * base_measure, .y = 0.5 * res_size * base_measure },
         },
     },
 }, .{
     .triangle = .{
         .points = .{
-            .{ .x = -13.2, .y = -5 },
-            .{ .x = 13.2, .y = 5 },
-            .{ .x = 13.2, .y = -5 },
+            .{ .x = -res_size * base_measure, .y = -0.5 * res_size * base_measure },
+            .{ .x = res_size * base_measure, .y = 0.5 * res_size * base_measure },
+            .{ .x = res_size * base_measure, .y = -0.5 * res_size * base_measure },
         },
     },
 }, .{
-    .circle = .{ .center = .{ .x = 0, .y = 0 }, .radius = 7 },
+    .circle = .{
+        .center = .{ .x = 0, .y = 0 },
+        .radius = 0.75 * res_size * base_measure,
+    },
 } };
+
+const worker_size = 0.1;
+pub const worker: []const Shape = &.{.{
+    .circle = .{
+        .center = .{ .x = 0, .y = 0 },
+        .radius = worker_size * base_measure,
+    },
+}};
+
+const tank_size = 0.3;
+pub const tank: []const Shape = &.{ .{
+    .triangle = .{
+        .points = .{
+            .{ .x = -tank_size * base_measure, .y = -tank_size * base_measure },
+            .{ .x = -tank_size * base_measure, .y = tank_size * base_measure },
+            .{ .x = tank_size * base_measure, .y = -tank_size * base_measure },
+        },
+    },
+}, .{
+    .triangle = .{
+        .points = .{
+            .{ .x = tank_size * base_measure, .y = -tank_size * base_measure },
+            .{ .x = -tank_size * base_measure, .y = tank_size * base_measure },
+            .{ .x = tank_size * base_measure, .y = tank_size * base_measure },
+        },
+    },
+}, .{
+    .circle = .{
+        .center = .{
+            .x = 0.5 * tank_size * base_measure,
+            .y = -tank_size * base_measure,
+        },
+        .radius = 0.3 * tank_size * base_measure,
+    },
+} };
+
+const fighter_size = 0.15;
+pub const fighter: []const Shape = &.{.{
+    .triangle = .{
+        .points = .{
+            .{ .x = 0, .y = -fighter_size * base_measure },
+            .{ .x = -0.25 * fighter_size * base_measure, .y = 0 },
+            .{ .x = 0.25 * fighter_size * base_measure, .y = 0 },
+        },
+    },
+}};

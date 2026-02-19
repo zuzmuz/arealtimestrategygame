@@ -78,6 +78,12 @@ pub fn main() anyerror!void {
         .entity = &res_drop,
     });
 
+    // var base_unit = Unit {
+    //     .entity = &base,
+    //     .unit_type = .building,
+    //     .selected = false
+    // };
+
     var selection = false;
     var selection_begin: ?rl.Vector2 = null;
     var selection_end: ?rl.Vector2 = null;
@@ -101,6 +107,8 @@ pub fn main() anyerror!void {
             selection = false;
             selection_begin = null;
             selection_end = null;
+
+
         }
 
         // Draw
