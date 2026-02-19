@@ -6,28 +6,34 @@ const Unit = struct { entity: *const Entity, unit_type: UnitType, selected: bool
 
 const UnitType = enum { worker, military, building };
 
+fn getPlayerColor(number: u8) rl.Color {
+    return switch (number) {
+        0 => .fromHSV(0, 0, 0.5),
+        1 => .fromHSV(0, 0.5, 0.9),
+        2 => .fromHSV(180, 0.5, 0.9),
+        3 => .fromHSV(60, 0.5, 0.9),
+        4 => .fromHSV(240, 0.5, 0.9),
+        5 => .fromHSV(30, 0.5, 0.9),
+        6 => .fromHSV(210, 0.5, 0.9),
+        7 => .fromHSV(90, 0.5, 0.9),
+        8 => .fromHSV(300, 0.5, 0.9),
+        else => .fromHSV(0, 0, 0),
+    };
+}
 /// Entity represent
 const Entity = struct {
     shapes: []const shapes.Shape,
-    colors: []const rl.Color,
-    links: std.ArrayList(Link),
+    transform: rl.Matrix,
+    player_number: u8,
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
-        // Draw the entity itself
-        for (self.shapes, self.colors) |shape, color| {
-            shape.draw(transform, color);
-        }
-
-        // Draw linked entities
-        for (self.links.items) |link| {
-            link.entity.draw(rl.math.matrixMultiply(transform, link.transform));
+        for (self.shapes) |shape| {
+            shape.draw(
+                rl.math.matrixMultiply(transform, self.transform),
+                getPlayerColor(self.player_number),
+            );
         }
     }
-};
-
-const Link = struct {
-    transform: rl.Matrix,
-    entity: *const Entity,
 };
 
 pub fn main() anyerror!void {
@@ -38,7 +44,7 @@ pub fn main() anyerror!void {
 
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
     defer arena.deinit();
-    const allocator = arena.allocator();
+    // const allocator = arena.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
     defer rl.closeWindow();
@@ -46,89 +52,62 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
-    var root = Entity{
-        .shapes = &.{},
-        .colors = &.{},
-        .links = .empty,
-    };
-
     const base = Entity{
         .shapes = shapes.base,
-        .colors = &.{.blue},
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(-100, 20, 0),
+        .player_number = 7,
     };
 
     const res_drop = Entity{
         .shapes = shapes.res_drop,
-        .colors = &.{ .red, .red, .red },
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(100, -20, 0),
+        .player_number = 8,
     };
 
     const worker = Entity{
         .shapes = shapes.worker,
-        .colors = &.{.yellow},
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(100, -150, 0),
+        .player_number = 3,
     };
 
     const war_factory = Entity{
         .shapes = shapes.war_factory,
-        .colors = &.{ .maroon, .maroon, .maroon, .maroon, .maroon, .maroon },
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(-100, 150, 0),
+        .player_number = 4,
     };
 
     const tank = Entity{
         .shapes = shapes.tank,
-        .colors = &.{ .green, .green, .green },
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(-100, -110, 0),
+        .player_number = 5,
     };
 
     const fighter = Entity{
         .shapes = shapes.fighter,
-        .colors = &.{.orange},
-        .links = .empty,
+        .transform = rl.math.matrixTranslate(100, 110, 0),
+        .player_number = 6,
     };
 
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(-100, 20, 0),
-        .entity = &base,
-    });
-
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(100, -20, 0),
-        .entity = &res_drop,
-    });
-
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(100, -150, 0),
-        .entity = &worker,
-    });
-
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(-100, -110, 0),
-        .entity = &tank,
-    });
-
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(100, 110, 0),
-        .entity = &fighter,
-    });
-
-    try root.links.append(allocator, .{
-        .transform = rl.math.matrixTranslate(-100, 150, 0),
-        .entity = &war_factory,
-    });
-
-    // var base_unit = Unit {
-    //     .entity = &base,
-    //     .unit_type = .building,
-    //     .selected = false
-    // };
+    const entities: []const Entity = &.{
+        base,
+        res_drop,
+        worker,
+        war_factory,
+        tank,
+        fighter,
+    };
 
     var selection = false;
     var selection_begin: ?rl.Vector2 = null;
     var selection_end: ?rl.Vector2 = null;
 
-    while (!rl.windowShouldClose()) { // Detect window close button or ESC key
+    const main_transform = rl.math.matrixTranslate(
+        screenWidth * 0.5,
+        screenHeight * 0.5,
+        0,
+    );
+
+    while (!rl.windowShouldClose()) {
         // Update
         //----------------------------------------------------------------------------------
         // TODO: Update your variables here
@@ -155,11 +134,10 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        root.draw(rl.math.matrixTranslate(
-            screenWidth * 0.5,
-            screenHeight * 0.5,
-            0,
-        ));
+        
+        for (entities) |entity| {
+            entity.draw(main_transform);
+        }
 
         // Drawing selection block
         if (selection_begin) |s_begin| if (selection_end) |s_end| {
