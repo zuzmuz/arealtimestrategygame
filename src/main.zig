@@ -8,7 +8,6 @@ const UnitType = enum { worker, military, building };
 
 /// Entity represent
 const Entity = struct {
-    id: usize,
     shapes: []const shapes.Shape,
     colors: []const rl.Color,
     links: std.ArrayList(Link),
@@ -48,44 +47,44 @@ pub fn main() anyerror!void {
     //--------------------------------------------------------------------------------------
 
     var root = Entity{
-        .id = 1,
         .shapes = &.{},
         .colors = &.{},
         .links = .empty,
     };
 
     const base = Entity{
-        .id = 2,
         .shapes = shapes.base,
         .colors = &.{.blue},
         .links = .empty,
     };
 
     const res_drop = Entity{
-        .id = 2,
         .shapes = shapes.res_drop,
         .colors = &.{ .red, .red, .red },
         .links = .empty,
     };
 
     const worker = Entity{
-        .id = 3,
         .shapes = shapes.worker,
         .colors = &.{.yellow},
         .links = .empty,
     };
-    
+
+    const war_factory = Entity{
+        .shapes = shapes.war_factory,
+        .colors = &.{ .maroon, .maroon, .maroon, .maroon, .maroon, .maroon },
+        .links = .empty,
+    };
+
     const tank = Entity{
-        .id = 4,
         .shapes = shapes.tank,
         .colors = &.{ .green, .green, .green },
         .links = .empty,
     };
 
     const fighter = Entity{
-        .id = 5,
         .shapes = shapes.fighter,
-        .colors = &.{ .orange },
+        .colors = &.{.orange},
         .links = .empty,
     };
 
@@ -112,6 +111,11 @@ pub fn main() anyerror!void {
     try root.links.append(allocator, .{
         .transform = rl.math.matrixTranslate(100, 110, 0),
         .entity = &fighter,
+    });
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(-100, 150, 0),
+        .entity = &war_factory,
     });
 
     // var base_unit = Unit {
