@@ -36,6 +36,10 @@
             .url = "git+https://github.com/raylib-zig/raylib-zig?ref=devel#cd71c85d571027ac8033357f83b124ee051825b3",
             .hash = "raylib_zig-5.6.0-dev-KE8REENOBQC-m5nK7M2b5aKSIubJPbPLUYcRhT7aT3RN",
         },
+        .luajit = .{
+            .url = "git+https://github.com/sackosoft/zig-luajit#4323070920147202a4f74f03fb67cd42d794a390",
+            .hash = "luajit-2.1.0-nMGF0kPDAwCHuZVz5A5rFIuxewhLyhCBaar1YJbtICyi",
+        },
     },
     .paths = .{
         "build.zig",

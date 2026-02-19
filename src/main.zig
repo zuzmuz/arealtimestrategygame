@@ -1,6 +1,6 @@
 const std = @import("std");
-const arealtimestrategygame = @import("arealtimestrategygame");
 const rl = @import("raylib");
+// const Lua = @import("luajit").Lua;
 
 const Shape = union(enum) {
     circle: struct {
@@ -177,4 +177,20 @@ pub fn main() anyerror!void {
             );
         };
     }
+}
+
+test "testing simple sum" {
+    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    // defer _ = gpa.deinit();
+    //
+    // const allocator = gpa.allocator();
+    // const lua = try Lua.init(allocator);
+    // defer lua.deinit();
+    //
+    // lua.openBaseLib();
+    //
+    // // Run some Lua code contained in a string
+    // lua.doString(
+    //     \\ print("[Lua] Hello, Lua!")
+    // ) catch unreachable; // We don't care about error handling right now
 }
