@@ -180,10 +180,11 @@ pub fn main() anyerror!void {
 }
 
 test "testing simple sum" {
-    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    // defer _ = gpa.deinit();
-    //
-    // const allocator = gpa.allocator();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    const allocator = gpa.allocator();
+    _ = allocator;
     // const lua = try Lua.init(allocator);
     // defer lua.deinit();
     //
