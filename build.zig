@@ -27,12 +27,12 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("raylib", raylib);
     exe.root_module.addImport("raygui", raygui);
     
-    const luajit_dep = b.dependency("luajit", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const luajit = luajit_dep.module("luajit");
-    exe.root_module.addImport("luajit", luajit);
+    // const luajit_dep = b.dependency("luajit", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    // const luajit = luajit_dep.module("luajit");
+    // exe.root_module.addImport("luajit", luajit);
 
     b.installArtifact(exe);
 

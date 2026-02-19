@@ -1,42 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-// const Lua = @import("luajit").Lua;
-
-const Shape = union(enum) {
-    circle: struct {
-        center: rl.Vector2,
-        radius: f32,
-    },
-    triangle: struct {
-        points: [3]rl.Vector2,
-    },
-
-    fn draw(self: *const Shape, transform: rl.Matrix) void {
-        switch (self.*) {
-            .circle => |*circle| {
-                const transformed = rl.math.vector2Transform(circle.center, transform);
-                rl.drawCircleV(
-                    transformed,
-                    circle.radius,
-                    .red,
-                );
-            },
-            .triangle => |*triangle| {
-                const points: [3]rl.Vector2 = .{
-                    rl.math.vector2Transform(triangle.points[0], transform),
-                    rl.math.vector2Transform(triangle.points[1], transform),
-                    rl.math.vector2Transform(triangle.points[2], transform),
-                };
-                rl.drawTriangle(
-                    points[0],
-                    points[1],
-                    points[2],
-                    .blue,
-                );
-            },
-        }
-    }
-};
+const shapes = @import("shapes.zig");
 
 const Unit = struct { entity: *const Entity, unit_type: UnitType, selected: bool };
 
@@ -45,7 +9,7 @@ const UnitType = enum { worker, military, building };
 /// Entity represent
 const Entity = struct {
     id: usize,
-    shapes: []const Shape,
+    shapes: []const shapes.Shape,
     links: std.ArrayList(Link),
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
@@ -82,49 +46,33 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
-    const circle_shape: Shape = .{
-        .circle = .{
-            .center = .{ .x = 0, .y = 0 },
-            .radius = 10,
-        },
-    };
-    const triangle_shape: Shape = .{
-        .triangle = .{
-            .points = .{
-                .{ .x = 0, .y = 10 },
-                .{ .x = 5, .y = -5 },
-                .{ .x = -5, .y = -5 },
-            },
-        },
-    };
-
-    const entity_1 = Entity{
-        .id = 2,
-        .shapes = &.{triangle_shape},
-        .links = .empty,
-    };
-
-    const entity_2 = Entity{
-        .id = 2,
-        .shapes = &.{circle_shape},
-        .links = .empty,
-    };
-
-    var entity_3_links: std.ArrayList(Link) = try .initCapacity(allocator, 2);
-    entity_3_links.appendAssumeCapacity(.{
-        .transform = rl.math.matrixTranslate(20, 0, 0),
-        .entity = &entity_1,
-    });
-    entity_3_links.appendAssumeCapacity(.{
-        .transform = rl.math.matrixTranslate(-20, 0, 0),
-        .entity = &entity_2,
-    });
-
-    const entity_3 = Entity{
+    var root = Entity{
         .id = 1,
-        .shapes = &.{circle_shape},
-        .links = entity_3_links,
+        .shapes = &.{},
+        .links = .empty,
     };
+
+    const base = Entity{
+        .id = 2,
+        .shapes = shapes.base,
+        .links = .empty,
+    };
+
+    const res_drop = Entity{
+        .id = 2,
+        .shapes = shapes.res_drop,
+        .links = .empty,
+    };
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(-100, 20, 0),
+        .entity = &base,
+    });
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(100, -20, 0),
+        .entity = &res_drop,
+    });
 
     var selection = false;
     var selection_begin: ?rl.Vector2 = null;
@@ -157,7 +105,7 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        entity_3.draw(rl.math.matrixTranslate(
+        root.draw(rl.math.matrixTranslate(
             screenWidth * 0.5,
             screenHeight * 0.5,
             0,
@@ -179,19 +127,3 @@ pub fn main() anyerror!void {
     }
 }
 
-test "testing simple sum" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-
-    const allocator = gpa.allocator();
-    _ = allocator;
-    // const lua = try Lua.init(allocator);
-    // defer lua.deinit();
-    //
-    // lua.openBaseLib();
-    //
-    // // Run some Lua code contained in a string
-    // lua.doString(
-    //     \\ print("[Lua] Hello, Lua!")
-    // ) catch unreachable; // We don't care about error handling right now
-}
