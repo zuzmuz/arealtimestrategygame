@@ -9,14 +9,21 @@ pub const Shape = union(enum) {
         points: [3]rl.Vector2,
     },
 
-    pub fn draw(self: *const Shape, transform: rl.Matrix) void {
+    pub fn draw(
+        self: *const Shape,
+        transform: rl.Matrix,
+        color: rl.Color,
+    ) void {
         switch (self.*) {
             .circle => |*circle| {
-                const transformed = rl.math.vector2Transform(circle.center, transform);
+                const transformed = rl.math.vector2Transform(
+                    circle.center,
+                    transform,
+                );
                 rl.drawCircleV(
                     transformed,
                     circle.radius,
-                    .red,
+                    color,
                 );
             },
             .triangle => |*triangle| {
@@ -29,7 +36,7 @@ pub const Shape = union(enum) {
                     points[0],
                     points[1],
                     points[2],
-                    .blue,
+                    color,
                 );
             },
         }

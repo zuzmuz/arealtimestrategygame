@@ -10,12 +10,13 @@ const UnitType = enum { worker, military, building };
 const Entity = struct {
     id: usize,
     shapes: []const shapes.Shape,
+    colors: []const rl.Color,
     links: std.ArrayList(Link),
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
         // Draw the entity itself
-        for (self.shapes) |shape| {
-            shape.draw(transform);
+        for (self.shapes, self.colors) |shape, color| {
+            shape.draw(transform, color);
         }
 
         // Draw linked entities
@@ -49,18 +50,21 @@ pub fn main() anyerror!void {
     var root = Entity{
         .id = 1,
         .shapes = &.{},
+        .colors = &.{},
         .links = .empty,
     };
 
     const base = Entity{
         .id = 2,
         .shapes = shapes.base,
+        .colors = &.{.blue},
         .links = .empty,
     };
 
     const res_drop = Entity{
         .id = 2,
         .shapes = shapes.res_drop,
+        .colors = &.{ .red, .red, .red },
         .links = .empty,
     };
 
@@ -126,4 +130,3 @@ pub fn main() anyerror!void {
         };
     }
 }
-
