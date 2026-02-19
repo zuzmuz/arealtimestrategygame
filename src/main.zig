@@ -68,6 +68,27 @@ pub fn main() anyerror!void {
         .links = .empty,
     };
 
+    const worker = Entity{
+        .id = 3,
+        .shapes = shapes.worker,
+        .colors = &.{.yellow},
+        .links = .empty,
+    };
+    
+    const tank = Entity{
+        .id = 4,
+        .shapes = shapes.tank,
+        .colors = &.{ .green, .green, .green },
+        .links = .empty,
+    };
+
+    const fighter = Entity{
+        .id = 5,
+        .shapes = shapes.fighter,
+        .colors = &.{ .orange },
+        .links = .empty,
+    };
+
     try root.links.append(allocator, .{
         .transform = rl.math.matrixTranslate(-100, 20, 0),
         .entity = &base,
@@ -76,6 +97,21 @@ pub fn main() anyerror!void {
     try root.links.append(allocator, .{
         .transform = rl.math.matrixTranslate(100, -20, 0),
         .entity = &res_drop,
+    });
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(100, -150, 0),
+        .entity = &worker,
+    });
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(-100, -110, 0),
+        .entity = &tank,
+    });
+
+    try root.links.append(allocator, .{
+        .transform = rl.math.matrixTranslate(100, 110, 0),
+        .entity = &fighter,
     });
 
     // var base_unit = Unit {
@@ -107,8 +143,6 @@ pub fn main() anyerror!void {
             selection = false;
             selection_begin = null;
             selection_end = null;
-
-
         }
 
         // Draw
