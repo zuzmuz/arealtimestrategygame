@@ -38,18 +38,24 @@ const Shape = union(enum) {
     }
 };
 
+const Unit = struct { entity: *const Entity, unit_type: UnitType, selected: bool };
+
+const UnitType = enum { worker, military, building };
+
 /// Entity represent
 const Entity = struct {
     id: usize,
-    shape: Shape,
-    links: []const Link,
+    shapes: []const Shape,
+    links: std.ArrayList(Link),
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
         // Draw the entity itself
-        self.shape.draw(transform);
+        for (self.shapes) |shape| {
+            shape.draw(transform);
+        }
 
         // Draw linked entities
-        for (self.links) |link| {
+        for (self.links.items) |link| {
             link.entity.draw(rl.math.matrixMultiply(transform, link.transform));
         }
     }
@@ -68,7 +74,7 @@ pub fn main() anyerror!void {
 
     var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
     defer arena.deinit();
-    // const allocator = arena.allocator();
+    const allocator = arena.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "aRealTimeStrategyGame");
     defer rl.closeWindow();
@@ -94,29 +100,30 @@ pub fn main() anyerror!void {
 
     const entity_1 = Entity{
         .id = 2,
-        .shape = triangle_shape,
-        .links = &.{},
+        .shapes = &.{triangle_shape},
+        .links = .empty,
     };
 
     const entity_2 = Entity{
         .id = 2,
-        .shape = circle_shape,
-        .links = &.{},
+        .shapes = &.{circle_shape},
+        .links = .empty,
     };
+
+    var entity_3_links: std.ArrayList(Link) = try .initCapacity(allocator, 2);
+    entity_3_links.appendAssumeCapacity(.{
+        .transform = rl.math.matrixTranslate(20, 0, 0),
+        .entity = &entity_1,
+    });
+    entity_3_links.appendAssumeCapacity(.{
+        .transform = rl.math.matrixTranslate(-20, 0, 0),
+        .entity = &entity_2,
+    });
 
     const entity_3 = Entity{
         .id = 1,
-        .shape = circle_shape,
-        .links = &.{
-            .{
-                .transform = rl.math.matrixTranslate(20, 0, 0),
-                .entity = &entity_1,
-            },
-            .{
-                .transform = rl.math.matrixTranslate(-20, 0, 0),
-                .entity = &entity_2,
-            },
-        },
+        .shapes = &.{circle_shape},
+        .links = entity_3_links,
     };
 
     var selection = false;
