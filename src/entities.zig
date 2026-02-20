@@ -50,22 +50,21 @@ pub const Entity = struct {
             transform,
             self.transform,
         );
-        if (self.selected) {
-            const selectable_transform = rl.math.matrixScale(1.5, 1.5, 1);
-            for (self.shapes) |shape| {
+        for (self.shapes) |shape| {
+            if (self.selected) {
                 shape.draw(
-                    rl.math.matrixMultiply(
-                        selectable_transform,
-                        object_transform,
-                    ),
+                    object_transform,
                     getPlayerColor(255),
+                    self.selected,
                 );
             }
         }
+
         for (self.shapes) |shape| {
             shape.draw(
                 object_transform,
                 getPlayerColor(self.player_number),
+                false,
             );
         }
     }

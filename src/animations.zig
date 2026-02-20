@@ -3,7 +3,7 @@ const rl = @import("raylib");
 
 
 const Animation = struct {
-    initial_state: f32,
-    end_state: f32,
-    current_state: f32,
+    initial_state: rl.Vector2,
+    end_state: rl.Vector2,
+    current_state: rl.Vector2,
 };
