@@ -51,6 +51,23 @@ const Entity = struct {
     // entity_type: EntityType,
     selected: bool = false,
 
+    fn contains(
+        self: *const Entity,
+        point: rl.Vector2,
+        transform: rl.Matrix,
+    ) bool {
+        const object_transform = rl.math.matrixMultiply(
+            transform,
+            self.transform,
+        );
+        for (self.shapes) |shape| {
+            if (shape.contains(point, object_transform)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     fn in_selection(
         self: *const Entity,
         selection: rl.Rectangle,
@@ -173,6 +190,18 @@ pub fn main() anyerror!void {
         // TODO: Update your variables here
         //----------------------------------------------------------------------------------
 
+        if (rl.isMouseButtonPressed(.left)) {
+            for (entities) |entity| {
+                entity.selected = false;
+            }
+
+            for (entities) |entity| {
+                if (entity.contains(rl.getMousePosition(), main_transform)) {
+                    entity.selected = true;
+                }
+            }
+        }
+
         if (rl.isMouseButtonDown(.left)) {
             for (entities) |entity| {
                 entity.selected = false;
@@ -203,6 +232,9 @@ pub fn main() anyerror!void {
 
             selection_begin = null;
             selection_end = null;
+        }
+
+        if (rl.isMouseButtonPressed(.right)) {
         }
 
         // Draw
