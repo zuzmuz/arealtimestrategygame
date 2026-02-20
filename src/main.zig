@@ -2,10 +2,6 @@ const std = @import("std");
 const rl = @import("raylib");
 const shapes = @import("shapes.zig");
 
-const Unit = struct { entity: *const Entity, unit_type: UnitType, selected: bool };
-
-const UnitType = enum { worker, military, building };
-
 fn getPlayerColor(number: u8) rl.Color {
     return switch (number) {
         0 => .fromHSV(0, 0, 0.5),
@@ -20,16 +16,66 @@ fn getPlayerColor(number: u8) rl.Color {
         else => .fromHSV(0, 0, 0),
     };
 }
+
+const Unit = struct {
+    base_health: u16,
+    current_health: u16,
+    attack: u16,
+    defense: u16,
+    range: u16,
+    velocity: u16,
+    first_attack_delay: u16,
+    attack_delay: u16,
+};
+
+const Building = struct {
+    base_health: u16,
+    current_health: u16,
+    attack: u16,
+    defense: u16,
+    range: u16,
+    first_attack_delay: u16,
+    attack_delay: u16,
+};
+
+const EntityType = union(enum) {
+    unit: Unit,
+    building: Building,
+    // resource: Resource,
+};
 /// Entity represent
 const Entity = struct {
     shapes: []const shapes.Shape,
     transform: rl.Matrix,
     player_number: u8,
+    // entity_type: EntityType,
+    selected: bool = false,
+
+    fn in(
+        self: *const Entity,
+        selection_begin: rl.Vector2,
+        selection_end: rl.Vector2,
+    ) bool {
+        _ = self.selected;
+        _ = selection_begin;
+        _ = selection_end;
+        return false;
+    }
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
+        const object_transform = rl.math.matrixMultiply(transform, self.transform);
+        if (self.selected) {
+            const selectable_transform = rl.math.matrixScale(1.1, 1.1, 1);
+            for (self.shapes) |shape| {
+                shape.draw(
+                    rl.math.matrixMultiply(selectable_transform, object_transform),
+                    getPlayerColor(255),
+                );
+            }
+        }
         for (self.shapes) |shape| {
             shape.draw(
-                rl.math.matrixMultiply(transform, self.transform),
+                object_transform,
                 getPlayerColor(self.player_number),
             );
         }
@@ -52,49 +98,50 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
     //--------------------------------------------------------------------------------------
 
-    const base = Entity{
+    var base = Entity{
         .shapes = shapes.base,
         .transform = rl.math.matrixTranslate(-100, 20, 0),
         .player_number = 7,
     };
 
-    const res_drop = Entity{
+    var res_drop = Entity{
         .shapes = shapes.res_drop,
         .transform = rl.math.matrixTranslate(100, -20, 0),
         .player_number = 8,
     };
 
-    const worker = Entity{
+    var worker = Entity{
         .shapes = shapes.worker,
         .transform = rl.math.matrixTranslate(100, -150, 0),
         .player_number = 3,
     };
 
-    const war_factory = Entity{
+    var war_factory = Entity{
         .shapes = shapes.war_factory,
         .transform = rl.math.matrixTranslate(-100, 150, 0),
         .player_number = 4,
     };
 
-    const tank = Entity{
+    var tank = Entity{
         .shapes = shapes.tank,
         .transform = rl.math.matrixTranslate(-100, -110, 0),
         .player_number = 5,
     };
 
-    const fighter = Entity{
+    var fighter = Entity{
         .shapes = shapes.fighter,
         .transform = rl.math.matrixTranslate(100, 110, 0),
         .player_number = 6,
+        .selected = true,
     };
 
-    const entities: []const Entity = &.{
-        base,
-        res_drop,
-        worker,
-        war_factory,
-        tank,
-        fighter,
+    const entities: [6]*Entity = .{
+        &base,
+        &res_drop,
+        &worker,
+        &war_factory,
+        &tank,
+        &fighter,
     };
 
     var selection = false;
@@ -126,6 +173,14 @@ pub fn main() anyerror!void {
             selection = false;
             selection_begin = null;
             selection_end = null;
+
+            if (selection_begin) |s_begin| if (selection_end) |s_end| {
+                for (entities) |entity| {
+                    if (entity.in(s_begin, s_end)) {
+                        entity.selected = true;
+                    }
+                }
+            };
         }
 
         // Draw
@@ -134,7 +189,7 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(.white);
-        
+
         for (entities) |entity| {
             entity.draw(main_transform);
         }
