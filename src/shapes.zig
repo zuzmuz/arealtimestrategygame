@@ -9,6 +9,40 @@ pub const Shape = union(enum) {
         points: [3]rl.Vector2,
     },
 
+    pub fn in_selection(
+        self: *const Shape,
+        selection: rl.Rectangle,
+        transform: rl.Matrix,
+    ) bool {
+        switch (self.*) {
+            .circle => |*circle| {
+                const transformed_center = rl.math.vector2Transform(
+                    circle.center,
+                    transform,
+                );
+                const transformed_radius = circle.radius * rl.math.matrixDeterminant(transform);
+                return rl.checkCollisionCircleRec(
+                    transformed_center,
+                    transformed_radius,
+                    selection,
+                );
+            },
+            .triangle => |*triangle| {
+                const points: [3]rl.Vector2 = .{
+                    rl.math.vector2Transform(triangle.points[0], transform),
+                    rl.math.vector2Transform(triangle.points[1], transform),
+                    rl.math.vector2Transform(triangle.points[2], transform),
+                };
+                for (points) |point| {
+                    if (rl.checkCollisionPointRec(point, selection)) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+        }
+    }
+
     pub fn draw(
         self: *const Shape,
         transform: rl.Matrix,
@@ -16,13 +50,14 @@ pub const Shape = union(enum) {
     ) void {
         switch (self.*) {
             .circle => |*circle| {
-                const transformed = rl.math.vector2Transform(
+                const transformed_center = rl.math.vector2Transform(
                     circle.center,
                     transform,
                 );
+                const transformed_radius = circle.radius * rl.math.matrixDeterminant(transform);
                 rl.drawCircleV(
-                    transformed,
-                    circle.radius,
+                    transformed_center,
+                    transformed_radius,
                     color,
                 );
             },

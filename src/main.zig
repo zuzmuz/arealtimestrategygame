@@ -51,24 +51,37 @@ const Entity = struct {
     // entity_type: EntityType,
     selected: bool = false,
 
-    fn in(
+    fn in_selection(
         self: *const Entity,
-        selection_begin: rl.Vector2,
-        selection_end: rl.Vector2,
+        selection: rl.Rectangle,
+        transform: rl.Matrix,
     ) bool {
-        _ = self.selected;
-        _ = selection_begin;
-        _ = selection_end;
+        // TODO: I need to invert the matrix or transform the shapes
+        const object_transform = rl.math.matrixMultiply(
+            transform,
+            self.transform,
+        );
+        for (self.shapes) |shape| {
+            if (shape.in_selection(selection, object_transform)) {
+                return true;
+            }
+        }
         return false;
     }
 
     fn draw(self: *const Entity, transform: rl.Matrix) void {
-        const object_transform = rl.math.matrixMultiply(transform, self.transform);
+        const object_transform = rl.math.matrixMultiply(
+            transform,
+            self.transform,
+        );
         if (self.selected) {
-            const selectable_transform = rl.math.matrixScale(1.1, 1.1, 1);
+            const selectable_transform = rl.math.matrixScale(1.5, 1.5, 1);
             for (self.shapes) |shape| {
                 shape.draw(
-                    rl.math.matrixMultiply(selectable_transform, object_transform),
+                    rl.math.matrixMultiply(
+                        selectable_transform,
+                        object_transform,
+                    ),
                     getPlayerColor(255),
                 );
             }
@@ -161,6 +174,9 @@ pub fn main() anyerror!void {
         //----------------------------------------------------------------------------------
 
         if (rl.isMouseButtonDown(.left)) {
+            for (entities) |entity| {
+                entity.selected = false;
+            }
             if (selection) {
                 selection_end = rl.getMousePosition();
             } else {
@@ -171,16 +187,22 @@ pub fn main() anyerror!void {
         }
         if (rl.isMouseButtonReleased(.left)) {
             selection = false;
-            selection_begin = null;
-            selection_end = null;
-
             if (selection_begin) |s_begin| if (selection_end) |s_end| {
+                const selection_rectange = rl.Rectangle{
+                    .x = if (s_begin.x < s_end.x) s_begin.x else s_end.x,
+                    .y = if (s_begin.y < s_end.y) s_begin.y else s_end.y,
+                    .width = if (s_begin.x > s_end.x) s_begin.x - s_end.x else s_end.x - s_begin.x,
+                    .height = if (s_begin.y > s_end.y) s_begin.y - s_end.y else s_end.y - s_begin.y,
+                };
                 for (entities) |entity| {
-                    if (entity.in(s_begin, s_end)) {
+                    if (entity.in_selection(selection_rectange, main_transform)) {
                         entity.selected = true;
                     }
                 }
             };
+
+            selection_begin = null;
+            selection_end = null;
         }
 
         // Draw
