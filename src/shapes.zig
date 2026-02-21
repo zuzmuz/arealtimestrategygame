@@ -9,6 +9,21 @@ pub const Shape = union(enum) {
         points: [3]rl.Vector2,
     },
 
+    // pub fn Triangle(
+    //     points: [3]rl.Vector2,
+    // ) Shape {
+    //     const center = rl.Vector2{
+    //         .x = (points[0].x + points[1].x + points[2].x) / 3,
+    //         .y = (points[0].y + points[1].y + points[2].y) / 3,
+    //     };
+    //
+    //     return .{ .triangle = .{
+    //         rl.math.vector2Subtract(points[0], center),
+    //         rl.math.vector2Subtract(points[1], center),
+    //         rl.math.vector2Subtract(points[2], center),
+    //     } };
+    // }
+
     pub fn contains(
         self: *const Shape,
         point: rl.Vector2,
@@ -123,50 +138,73 @@ pub const Shape = union(enum) {
                 );
             },
             .triangle => |*triangle| {
-                var points: [3]rl.Vector2 = .{
-                    rl.math.vector2Transform(triangle.points[0], transform),
-                    rl.math.vector2Transform(triangle.points[1], transform),
-                    rl.math.vector2Transform(triangle.points[2], transform),
-                };
-
                 if (selected) {
                     const center = rl.Vector2{
-                        .x = (points[0].x + points[1].x + points[2].x) / 3,
-                        .y = (points[0].y + points[1].y + points[2].y) / 3,
+                        .x = (triangle.points[0].x + triangle.points[1].x + triangle.points[2].x) / 3,
+                        .y = (triangle.points[0].y + triangle.points[1].y + triangle.points[2].y) / 3,
                     };
 
-                    const norm_vectors: [3]rl.Vector2 = .{
-                        rl.math.vector2Normalize(
-                            rl.math.vector2Subtract(points[0], center),
+                    const points: [3]rl.Vector2 = .{
+                        rl.math.vector2Transform(
+                            rl.math.vector2Add(
+                                rl.math.vector2Scale(
+                                    rl.math.vector2Subtract(
+                                        triangle.points[0],
+                                        center,
+                                    ),
+                                    1.1,
+                                ),
+                                center,
+                            ),
+                            transform,
                         ),
-                        rl.math.vector2Normalize(
-                            rl.math.vector2Subtract(points[1], center),
+                        rl.math.vector2Transform(
+                            rl.math.vector2Add(
+                                rl.math.vector2Scale(
+                                    rl.math.vector2Subtract(
+                                        triangle.points[1],
+                                        center,
+                                    ),
+                                    1.1,
+                                ),
+                                center,
+                            ),
+                            transform,
                         ),
-                        rl.math.vector2Normalize(
-                            rl.math.vector2Subtract(points[2], center),
+                        rl.math.vector2Transform(
+                            rl.math.vector2Add(
+                                rl.math.vector2Scale(
+                                    rl.math.vector2Subtract(
+                                        triangle.points[2],
+                                        center,
+                                    ),
+                                    1.1,
+                                ),
+                                center,
+                            ),
+                            transform,
                         ),
                     };
 
-                    points[0] = rl.math.vector2Add(
+                    rl.drawTriangle(
                         points[0],
-                        rl.math.vector2Scale(norm_vectors[0], 3),
-                    );
-                    points[1] = rl.math.vector2Add(
                         points[1],
-                        rl.math.vector2Scale(norm_vectors[1], 3),
-                    );
-                    points[2] = rl.math.vector2Add(
                         points[2],
-                        rl.math.vector2Scale(norm_vectors[2], 3),
+                        color,
+                    );
+                } else {
+                    const points: [3]rl.Vector2 = .{
+                        rl.math.vector2Transform(triangle.points[0], transform),
+                        rl.math.vector2Transform(triangle.points[1], transform),
+                        rl.math.vector2Transform(triangle.points[2], transform),
+                    };
+                    rl.drawTriangle(
+                        points[0],
+                        points[1],
+                        points[2],
+                        color,
                     );
                 }
-
-                rl.drawTriangle(
-                    points[0],
-                    points[1],
-                    points[2],
-                    color,
-                );
             },
         }
     }
